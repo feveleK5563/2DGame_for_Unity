@@ -63,5 +63,5 @@ public class ChaseTarget : CharacterBase
 
         ResetVelocity();
         AddVelocity(velocity.x, velocity.y);
-    }    
+    }
 }

@@ -41,10 +41,16 @@ public abstract class CharacterBase : MonoBehaviour
         velocity_.y = 0.0f;
     }
 
-    // 動力追加
+    // 動力加算
     internal void AddVelocity(float x, float y)
     {
         velocity_ += new Vector2(x, y);
+    }
+
+    // 動力乗算
+    internal void MultiVelocity(float x, float y)
+    {
+        velocity_ *= new Vector2(x, y);
     }
 
     // 動力取得
