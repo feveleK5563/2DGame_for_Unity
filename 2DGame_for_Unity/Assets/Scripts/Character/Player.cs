@@ -115,14 +115,11 @@ class Player : CharacterBase
                             ChangeState_Attack,
                             ChangeState_Jump,
                             ChangeState_Squat,
+                            ChangeState_Run,
                     });
                     if (!is_change && state_time >= 0.3f)
                     {
-                        state_.ChangeStateCondition(
-                            new StateCondition[] {
-                                ChangeState_Idle,
-                                ChangeState_Run,
-                        });
+                        ChangeState_Idle();
                     }
                 }
                 break;
@@ -297,6 +294,7 @@ class Player : CharacterBase
     // しゃがみ+しゃがみ戻り遷移
     bool ChangeState_Squat()
     {
+        UpdateDirection();
         if (is_ground_ &&
             input_axis_.y < -0.5f)
         {
