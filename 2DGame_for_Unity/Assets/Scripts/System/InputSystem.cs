@@ -21,7 +21,7 @@ public enum InputType : int
 // UnityのInputをなんか使いやすくしたい系ラッパー
 public class InputSystem : MonoBehaviour
 {
-    public float InputRecordTime;   // 入力の保存時間
+    public float PushRecordTime;   // 入力の保存時間
 
     private static readonly string[] ButtonType =
     {
@@ -41,7 +41,7 @@ public class InputSystem : MonoBehaviour
     {
         public bool is_push;            // 入力状態
         public float state_time;        // 状態の継続時間
-        public float input_record_time; // 入力の記録時間
+        public float push_record_time;  // 入力の記録時間
     }
     private ButtonData[] data_;
 
@@ -73,14 +73,14 @@ public class InputSystem : MonoBehaviour
             // 入力の記録保持判定
             if (is_push)
             {
-                data_[i].input_record_time = InputRecordTime;
+                data_[i].push_record_time = 0.0f;
             }
-            else if (data_[i].input_record_time > 0.0f)
+            else if (data_[i].push_record_time >= 0.0f)
             {
-                data_[i].input_record_time -= Time.deltaTime;
-                if (data_[i].input_record_time <= 0.0f)
+                data_[i].push_record_time += Time.deltaTime;
+                if (data_[i].push_record_time > PushRecordTime)
                 {
-                    data_[i].input_record_time = 0.0f;
+                    data_[i].push_record_time = -1.0f;
                 }
             }
         }
@@ -95,7 +95,7 @@ public class InputSystem : MonoBehaviour
         {
             data_[i].is_push = false;
             data_[i].state_time = 0.0f;
-            data_[i].input_record_time = 0.0f;
+            data_[i].push_record_time = -1.0f;
         }
     }
 
@@ -114,6 +114,18 @@ public class InputSystem : MonoBehaviour
         return data_[(int)type].is_push;
     }
 
+    // 押したか（先行入力含む）
+    public bool IsPushRecord(InputType type, float record_time)
+    {
+        ref ButtonData data = ref data_[(int)type];
+        if (data.push_record_time < 0.0f)
+        {
+            return false;
+        }
+
+        return data.push_record_time <= record_time;
+    }
+
     // 離した瞬間か
     public bool IsUp(InputType type)
     {
@@ -125,12 +137,6 @@ public class InputSystem : MonoBehaviour
     public bool IsRelease(InputType type)
     {
         return !data_[(int)type].is_push;
-    }
-
-    // 押したか（先行入力取得）
-    public bool IsPushRecord(InputType type)
-    {
-        return data_[(int)type].input_record_time > 0.0f;
     }
 
     // 状態の継続時間取得

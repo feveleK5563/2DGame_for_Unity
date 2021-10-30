@@ -251,8 +251,7 @@ class Player : CharacterBase
     {
         ResetVelocity();
         if (is_ground_ &&
-            input.IsDown(InputType.Button_A) ||
-            input.IsPushRecord(InputType.Button_A))
+            input.IsPushRecord(InputType.Button_A, 0.2f))
         {
             UpdateDirection();
             state_.ChangeState(
@@ -313,8 +312,7 @@ class Player : CharacterBase
     // 攻撃遷移
     bool ChangeState_Attack()
     {
-        if (input.IsDown(InputType.Button_X) ||
-            input.IsPushRecord(InputType.Button_X))
+        if (input.IsPushRecord(InputType.Button_X, 0.15f))
         {
             UpdateDirection();
             state_.ChangeState(
