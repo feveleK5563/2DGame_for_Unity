@@ -4,7 +4,7 @@ using UnityEngine;
 
 public abstract class CharacterBase : MonoBehaviour
 {
-    void Start()
+    void Awake()
     {
         rigid_body_ = GetComponent<Rigidbody2D>();
         animator_ = GetComponent<Animator>();

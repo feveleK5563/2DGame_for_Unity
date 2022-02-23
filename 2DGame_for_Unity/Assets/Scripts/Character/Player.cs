@@ -4,11 +4,14 @@ using UnityEngine;
 
 class Player : CharacterBase
 {
-    // InputSystemを持ってるゲームオブジェクトを指定してくれ～～
-    public GameObject gMainSystem;
-
-    public float RunSpeed;  // 走る速度
-    public float JumpForce; // ジャンプ力
+    [Tooltip("走る有効な入力量")]
+    public float InputRate_Run = 0.4f;
+    [Tooltip("しゃがむ有効な入力量")]
+    public float InputRate_Squat = 0.8f;
+    [Tooltip("走る速度")]
+    public float RunSpeed = 0.1f;
+    [Tooltip("ジャンプ力")]
+    public float JumpForce = 600f;
 
     public enum State : int
     {
@@ -26,7 +29,7 @@ class Player : CharacterBase
         Attack2     = 11,   // 攻撃_2段階
     }
 
-    private InputSystem input = null;
+    private InputActions input_actions_;
 
     private StateManager<State> state_;
     private Vector2 input_axis_;
@@ -38,7 +41,8 @@ class Player : CharacterBase
     // 初期化
     internal override void Initialize()
     {
-        input = gMainSystem.GetComponent<InputSystem>();
+        input_actions_ = new InputActions();
+        input_actions_.Enable();
 
         SetDirection(true);
         animator_.SetBool("DirectionLR", true);
@@ -53,8 +57,7 @@ class Player : CharacterBase
     {
         state_.Update();
 
-        input_axis_.x = Input.GetAxis("Axis_DPad_X");
-        input_axis_.y = Input.GetAxis("Axis_DPad_Y");
+        input_axis_ = input_actions_.Player.Move.ReadValue<Vector2>();
 
         State state = state_.GetState();
         float state_time = state_.GetStateTime();
@@ -155,16 +158,16 @@ class Player : CharacterBase
         {
             // 走る
             case State.Run:
-                AddVelocity((input_axis_.x > 0.0f) ? RunSpeed :
-                            (input_axis_.x < 0.0f) ? -RunSpeed :
+                AddVelocity((input_axis_.x > InputRate_Run) ? RunSpeed :
+                            (input_axis_.x < -InputRate_Run) ? -RunSpeed :
                             0.0f, 0.0f);
                 break;
 
             // ジャンプ
             case State.Jump_Idle:
             case State.Jump_Run:
-                AddVelocity((input_axis_.x > 0.0f) ? RunSpeed :
-                            (input_axis_.x < 0.0f) ? -RunSpeed :
+                AddVelocity((input_axis_.x > InputRate_Run) ? RunSpeed :
+                            (input_axis_.x < -InputRate_Run) ? -RunSpeed :
                             0.0f, 0.0f);
                 if (is_ground_)
                 {
@@ -173,18 +176,12 @@ class Player : CharacterBase
                 }
                 break;
 
-            // 落下
+            // 落下・着地
             case State.Fall_Idle:
             case State.Fall_Run:
-                AddVelocity((input_axis_.x > 0.0f) ? RunSpeed :
-                            (input_axis_.x < 0.0f) ? -RunSpeed :
-                            0.0f, 0.0f);
-                break;
-
-            // 着地
             case State.Landing:
-                AddVelocity((input_axis_.x > 0.0f) ? RunSpeed :
-                            (input_axis_.x < 0.0f) ? -RunSpeed :
+                AddVelocity((input_axis_.x > InputRate_Run) ? RunSpeed :
+                            (input_axis_.x < -InputRate_Run) ? -RunSpeed :
                             0.0f, 0.0f);
                 break;
 
@@ -209,11 +206,11 @@ class Player : CharacterBase
     // 向きの更新
     void UpdateDirection()
     {
-        if (input_axis_.x > 0.0f)
+        if (input_axis_.x > InputRate_Run)
         {
             SetDirection(true);
         }
-        else if (input_axis_.x < 0.0f)
+        else if (input_axis_.x < -InputRate_Run)
         {
             SetDirection(false);
         }
@@ -224,7 +221,7 @@ class Player : CharacterBase
     // 待機遷移
     bool ChangeState_Idle()
     {
-        if (input_axis_.x == 0.0f)
+        if (System.Math.Abs(input_axis_.x) <= InputRate_Run)
         {
             ResetVelocity();
             state_.ChangeState(State.Idle);
@@ -237,7 +234,7 @@ class Player : CharacterBase
     bool ChangeState_Run()
     {
         ResetVelocity();
-        if (input_axis_.x != 0.0f)
+        if (System.Math.Abs(input_axis_.x) > InputRate_Run)
         {
             UpdateDirection();
             state_.ChangeState(State.Run);
@@ -251,7 +248,7 @@ class Player : CharacterBase
     {
         ResetVelocity();
         if (is_ground_ &&
-            input.IsPushRecord(InputType.Button_A, 0.2f))
+            input_actions_.Player.Jump.triggered)
         {
             UpdateDirection();
             state_.ChangeState(
@@ -295,7 +292,7 @@ class Player : CharacterBase
     {
         UpdateDirection();
         if (is_ground_ &&
-            input_axis_.y < -0.5f)
+            input_axis_.y < -InputRate_Squat)
         {
             // しゃがみへ遷移
             state_.ChangeState(State.Squat);
@@ -312,15 +309,15 @@ class Player : CharacterBase
     // 攻撃遷移
     bool ChangeState_Attack()
     {
-        if (input.IsPushRecord(InputType.Button_X, 0.15f))
-        {
-            UpdateDirection();
-            state_.ChangeState(
-                state_.GetState() != State.Attack1
-                ? State.Attack1
-                : State.Attack2);
-            return true;
-        }
+        //if (input.IsPushRecord(InputType.Button_X, 0.15f))
+        //{
+        //    UpdateDirection();
+        //    state_.ChangeState(
+        //        state_.GetState() != State.Attack1
+        //        ? State.Attack1
+        //        : State.Attack2);
+        //    return true;
+        //}
         return false;
     }
 

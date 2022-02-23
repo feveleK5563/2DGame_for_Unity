@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class MainSystem : MonoBehaviour
 {
-    void Start()
+    void Awake()
     {
+        // 60fps固定にすゆ
         Application.targetFrameRate = 60;
     }
 
